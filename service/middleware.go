@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 	"github.com/liuyh73/dailyhub.service/db"
 )
 
@@ -31,19 +33,45 @@ func JWTMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "*")
 		w.Header().Set("Content-Type", "application/json")
 		if !permit(r.RequestURI) {
+			var mapClaims jwt.MapClaims
 			dh_token := ""
-			for k, v := range r.Header {
-				if strings.ToLower(k) == TokenName {
-					dh_token = v[0]
-					break
-				}
-			}
-			mapClaims, err := parseToken(dh_token, []byte(SecretKey))
+			// 如果token存在于Authorization中
+			token, err := request.ParseFromRequest(r, request.AuthorizationHeaderExtractor, func(token *jwt.Token) (interface{}, error) {
+				return []byte(SecretKey), nil
+			})
 			checkErr(err)
-			if err != nil || mapClaims.Valid() != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
-				return
+			if token != nil {
+				var ok bool
+				mapClaims, ok = token.Claims.(jwt.MapClaims)
+				if !ok {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+					return
+				}
+				dh_token = strings.Split(r.Header["Authorization"][0], " ")[1]
+			} else {
+				// 如果token存在于header中
+				for k, v := range r.Header {
+					if strings.ToLower(k) == TokenName {
+						dh_token = v[0]
+						break
+					}
+				}
+
+				log.Println(dh_token)
+				if dh_token == "" {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+					return
+				}
+
+				mapClaims, err = parseToken(dh_token, []byte(SecretKey))
+				checkErr(err)
+				if err != nil || mapClaims.Valid() != nil {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+					return
+				}
 			}
 			log.Println(mapClaims["username"])
 			has, err, tokenItem := db.GetUserTokenItem(mapClaims["username"].(string))

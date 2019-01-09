@@ -200,7 +200,7 @@ func UpdateUserProfile(profile model.Profile) (int64, error) {
 // 编辑、重要性、归档
 func UpdateUserHabit(username string, habit model.Habit) (int64, error) {
 	habit.Id = username + "-" + habit.Id
-	return Engine.Where("id=?", habit.Id).Update(habit)
+	return Engine.Where("id=?", habit.Id).AllCols().Update(habit)
 }
 
 // 修改打卡信息

@@ -233,7 +233,7 @@ func PostDayHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// 编辑、编辑、重要性
+// 编辑、归档/结束、重要性
 func PutHabitHandler(w http.ResponseWriter, r *http.Request) {
 	habit := &model.Habit{}
 	err := jsonDecode(r.Body, habit)

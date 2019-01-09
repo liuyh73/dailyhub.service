@@ -31,7 +31,7 @@ func checkErr(err error) {
 func createToken(secretkey []byte, issuer string, username string) (token Token, err error) {
 	claims := &jwtCustomClaims{
 		jwt.StandardClaims{
-			ExpiresAt: int64(time.Now().Add(time.Hour * 1).Unix()),
+			ExpiresAt: int64(time.Now().Add(time.Hour * 24).Unix()),
 			Issuer:    issuer,
 		},
 		username,
@@ -48,7 +48,7 @@ func parseToken(dh_token string, secretKey []byte) (claims jwt.MapClaims, err er
 	token, err = jwt.Parse(dh_token, func(*jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
-	fmt.Println("123123123", token.Claims)
+	fmt.Println(token.Claims)
 	claims = token.Claims.(jwt.MapClaims)
 	return
 }
