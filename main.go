@@ -28,6 +28,7 @@ func initRoutes(router *mux.Router) {
 	router.HandleFunc("/api/logout", service.LogoutHandler).Methods("POST", "GET")
 	// user相关
 	router.HandleFunc("/api/user", service.GetProfileHandler).Methods("GET")
+
 	// habits相关
 	// GET
 	sub := router.PathPrefix("/api/habits").Subrouter()
@@ -47,6 +48,17 @@ func initRoutes(router *mux.Router) {
 	// DELETE
 	sub.HandleFunc("/{habitId:[0-9]+}", service.DeleteHabitHandler).Methods("DELETE")
 	sub.HandleFunc("/{habitId:[0-9]+}/{monthId:[0-9-]+}/{dayId:[0-9]+}", service.DeleteDayHandler).Methods("DELETE")
+
+	// dailyCommits相关
+	sub = router.PathPrefix("/api/dailycommits").Subrouter()
+	// GET
+	sub.HandleFunc("", service.GetDailyCommitsHandler).Methods("GET")
+	// POST
+	sub.HandleFunc("", service.PostDailyCommitHandler).Methods("POST")
+	// PUT
+	sub.HandleFunc("/{dailyCommitId:[0-9]+}", service.PutDailyCommitHandler).Methods("PUT")
+	// DELETE
+	sub.HandleFunc("/{dailyCommitId:[0-9]+}", service.DeleteDailyCommitHandler).Methods("DELETE")
 	// router.HandleFunc("/api", service.ApiHandler).Methods("GET")
 }
 

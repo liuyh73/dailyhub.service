@@ -99,6 +99,19 @@ func GetUserHabitMonthDay(username, habitId, monthId, dayId string) (bool, error
 	return ok, err, day
 }
 
+func GetUserDailyCommits(username string) (error, []model.DailyCommit) {
+	dailyCommits := make([]model.DailyCommit, 0)
+	allDailyCommits := make([]model.DailyCommit, 0)
+	err := Engine.Find(&allDailyCommits)
+	for _, dailyCommit := range allDailyCommits {
+		if strings.HasPrefix(dailyCommit.Id, username) {
+			dailyCommit.Id = strings.TrimPrefix(dailyCommit.Id, username+"-")
+			dailyCommits = append(dailyCommits, dailyCommit)
+		}
+	}
+	return err, dailyCommits
+}
+
 func InsertUserTokenItem(username, dh_token string) (int64, error) {
 	tokenItem := model.TokenItem{
 		Username: username,
@@ -178,11 +191,42 @@ func InsertUserHabitMonthDay(username, habitId, monthId string, day model.Day) (
 		month.MissPunch = month.MissPunch - 1
 		Engine.Where("id = ?", month.Id).Update(month)
 	} else {
-		_, err := InsertUserHabitMonth(username, habitId, monthId, day.Id)
+		_, err = InsertUserHabitMonth(username, habitId, monthId, day.Id)
+		checkErr(err)
+	}
+
+	has, err, habit := GetUserHabit(username, habitId)
+	checkErr(err)
+	if has && err == nil {
+		habit.LastRecentPunchTime = habit.RecentPunchTime
+		habit.RecentPunchTime = day.Time
+		_, err = UpdateUserHabit(username, *habit)
 		checkErr(err)
 	}
 	day.Id = username + "-" + habitId + "-" + monthId + "-" + day.Id
 	return Engine.Insert(day)
+}
+
+// 创建dailyCommit
+func InsertUserDailyCommit(username string, dailyCommit model.DailyCommit) (int64, error, string) {
+	err, dailyCommits := GetUserDailyCommits(username)
+	checkErr(err)
+	if err == nil {
+		lastId := "0"
+		if len(dailyCommits) > 0 {
+			lastId = dailyCommits[len(dailyCommits)-1].Id
+		}
+		lastIdInt, err := strconv.Atoi(lastId)
+		checkErr(err)
+		if err == nil {
+			dailyCommitId := strconv.Itoa(lastIdInt + 1)
+			dailyCommit.Id = username + "-" + dailyCommitId
+			rows, err := Engine.Insert(dailyCommit)
+			return rows, err, dailyCommitId
+		}
+		return 0, err, "0"
+	}
+	return 0, err, "0"
 }
 
 func UpdateUserTokenItem(username, dh_token string) (int64, error) {
@@ -207,6 +251,12 @@ func UpdateUserHabit(username string, habit model.Habit) (int64, error) {
 func UpdateUserHabitMonthDay(username, habitId, monthId string, day model.Day) (int64, error) {
 	day.Id = username + "-" + habitId + "-" + monthId + "-" + day.Id
 	return Engine.Where("id=?", day.Id).Update(day)
+}
+
+// 修改dailyCommit
+func UpdateUserDailyCommit(username string, dailyCommit model.DailyCommit) (int64, error) {
+	dailyCommit.Id = username + "-" + dailyCommit.Id
+	return Engine.Where("id=?", dailyCommit.Id).AllCols().Update(dailyCommit)
 }
 
 // 删除token
@@ -278,9 +328,25 @@ func DeleteUserHabitMonthDay(username, habitId, monthId, dayId string) (int64, e
 		log.Println(rows)
 		checkErr(err)
 	}
+
+	has, err, habit := GetUserHabit(username, habitId)
+	checkErr(err)
+	if has && err == nil {
+		habit.RecentPunchTime = habit.LastRecentPunchTime
+		_, err = UpdateUserHabit(username, *habit)
+		checkErr(err)
+	}
 	tid := username + "-" + habitId + "-" + monthId + "-" + dayId
 	day := model.Day{
 		Id: tid,
 	}
 	return Engine.Delete(day)
+}
+
+// 删除dailyCommit
+func DeleteUserDailyCommit(username, dailyCommitId string) (int64, error) {
+	dailyCommit := model.DailyCommit{
+		Id: username + "-" + dailyCommitId,
+	}
+	return Engine.Delete(dailyCommit)
 }

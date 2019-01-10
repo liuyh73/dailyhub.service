@@ -9,16 +9,18 @@ type Profile struct {
 }
 
 type Habit struct {
-	Id           string `json:"id"`          // id
-	TimeQuantum  string `json:"timeQuantum"` // 时间段
-	Name         string `json:"name"`        // 名称
-	Icon         string `json:"icon"`        // 图标
-	File         bool   `json:"file"`        // 归档/结束
-	Color        string `json:"color"`
-	ReminderTime string `json:"reminderTime"` // 提醒时间
-	Encourage    string `json:"encourage"`    // 激励语句
-	Important    bool   `json:"important"`    // 是否重要
-	Notification bool   `json:"notification"` // 是否通知
+	Id                  string `json:"id"`          // id
+	TimeQuantum         string `json:"timeQuantum"` // 时间段
+	Name                string `json:"name"`        // 名称
+	Icon                string `json:"icon"`        // 图标
+	File                bool   `json:"file"`        // 归档/结束
+	Color               string `json:"color"`
+	ReminderTime        string `json:"reminderTime"`        // 提醒时间
+	Encourage           string `json:"encourage"`           // 激励语句
+	Important           bool   `json:"important"`           // 是否重要
+	Notification        bool   `json:"notification"`        // 是否通知
+	RecentPunchTime     string `json:"recentPunchTime"`     // 最近打卡时间
+	LastRecentPunchTime string `json:"lastRecentPunchTime"` // 上次打卡时间
 
 	TotalPunch int    `json:"totalPunch"` // 总打卡数
 	CurrcPunch int    `json:"currcPunch"` // 当前连续打卡数

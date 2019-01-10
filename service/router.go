@@ -191,6 +191,17 @@ func GetDayHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 获取所有dailyCommit
+func GetDailyCommitsHandler(w http.ResponseWriter, r *http.Request) {
+	err, dailyCommits := db.GetUserDailyCommits(r.Context().Value("username").(string))
+	checkErr(err)
+	if err == nil {
+		w.Write(writeResp(true, "Succeed to get the dayilCommits", dailyCommits))
+	} else {
+		w.Write(writeResp(false, "Fail to get the dayilCommits", dailyCommits))
+	}
+}
+
 // 创建habit
 func PostHabitsHandler(w http.ResponseWriter, r *http.Request) {
 	habit := &model.Habit{}
@@ -229,7 +240,26 @@ func PostDayHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(writeResp(false, "Fail to punch in the day", day))
 		}
 	} else {
-		w.Write(writeResp(false, "Failed to punch in the day", day))
+		w.Write(writeResp(false, "The request body need to be day type", day))
+	}
+}
+
+// 创建dailyCommit
+func PostDailyCommitHandler(w http.ResponseWriter, r *http.Request) {
+	dailyCommit := &model.DailyCommit{}
+	err := jsonDecode(r.Body, dailyCommit)
+	checkErr(err)
+	if err == nil {
+		_, err, dailyCommitId := db.InsertUserDailyCommit(r.Context().Value("username").(string), *dailyCommit)
+		checkErr(err)
+		if err == nil {
+			dailyCommit.Id = dailyCommitId
+			w.Write(writeResp(true, "Succeed to create the dailyCommit", dailyCommit))
+		} else {
+			w.Write(writeResp(false, "Fail to create the dailyCommit", dailyCommit))
+		}
+	} else {
+		w.Write(writeResp(false, "The request body need to be dailyCommit type", dailyCommit))
 	}
 }
 
@@ -268,7 +298,25 @@ func PutDayHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(writeResp(false, "Fail to update the punch info", day))
 		}
 	} else {
-		w.Write(writeResp(false, "The request body need to be habit type", day))
+		w.Write(writeResp(false, "The request body need to be day type", day))
+	}
+}
+
+// 更新dailyCommit
+func PutDailyCommitHandler(w http.ResponseWriter, r *http.Request) {
+	dailyCommit := &model.DailyCommit{}
+	err := jsonDecode(r.Body, dailyCommit)
+	checkErr(err)
+	if err == nil {
+		_, err = db.UpdateUserDailyCommit(r.Context().Value("username").(string), *dailyCommit)
+		checkErr(err)
+		if err == nil {
+			w.Write(writeResp(true, "Succeed to update the dailyCommit", dailyCommit))
+		} else {
+			w.Write(writeResp(false, "Fail to update the dailyCommit", dailyCommit))
+		}
+	} else {
+		w.Write(writeResp(false, "The request body need to be dailyCommit type", dailyCommit))
 	}
 }
 
@@ -296,5 +344,17 @@ func DeleteDayHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(writeResp(true, "Succeed to delete the punch", nil))
 	} else {
 		w.Write(writeResp(false, "Failed to delete the punch", nil))
+	}
+}
+
+// 删除dailyCommit
+func DeleteDailyCommitHandler(w http.ResponseWriter, r *http.Request) {
+	dailyCommitId := strings.Split(r.RequestURI, "/")[3]
+	_, err := db.DeleteUserDailyCommit(r.Context().Value("username").(string), dailyCommitId)
+	checkErr(err)
+	if err == nil {
+		w.Write(writeResp(true, "Succeed to delete the dailyCommit", nil))
+	} else {
+		w.Write(writeResp(false, "Failed to delete the dailyCommit", nil))
 	}
 }
