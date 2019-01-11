@@ -1,0 +1,36 @@
+version: "3.3"
+services:
+  database:
+    image: mysql:latest
+    container_name: dailyhub_db
+    restart: always
+    ports: 
+      - "3306:3306"
+    volumes: 
+      - data:/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: dailyhub
+      MYSQL_USER: dailyhub
+      MYSQL_PASSWORD_FILE: /run/secrets/db_user_password
+    secrets:
+      - db_root_password
+      - db_user_password
+  server:
+    depends_on:
+      - database
+    image: liuyh73/dailyhub_server:latest
+    container_name: dailyhub_server
+    restart: always
+    ports: 
+      - "9090:9090"
+    external_links:
+      - dailyhub_db:dailyhub_db
+secrets:
+  db_user_password:
+    file: db/db_user_password.txt
+  db_root_password:
+    file: db/db_root_password.txt
+
+volumes:
+  data:
