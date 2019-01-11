@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -48,7 +47,7 @@ func parseToken(dh_token string, secretKey []byte) (claims jwt.MapClaims, err er
 	token, err = jwt.Parse(dh_token, func(*jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
-	fmt.Println(token.Claims)
+	// fmt.Println(token.Claims)
 	claims = token.Claims.(jwt.MapClaims)
 	return
 }

@@ -3,7 +3,7 @@ package model
 type Profile struct {
 	Username    string   `json:"username"`           // 用户名
 	Password    string   `json:"password" xorm:"->"` // 密码
-	Avatar      string   `json:"avatar"`             // 用户头像
+	Avatar      []int8   `json:"avatar"`             // 用户头像
 	Description string   `json:"description"`        // 用户描述
 	Habits      []string `json:"habits"`             // 习惯id列表
 }

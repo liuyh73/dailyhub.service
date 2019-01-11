@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"strings"
 
@@ -12,16 +11,19 @@ import (
 )
 
 var permission = []string{
-	"/api",
 	"/api/register",
 	"/api/login",
+	"/api/users",
 }
 
 func permit(uri string) bool {
 	for _, u := range permission {
-		if u == uri {
+		if strings.HasPrefix(uri, u) {
 			return true
 		}
+	}
+	if uri == "/api" {
+		return true
 	}
 	return false
 }
@@ -58,7 +60,6 @@ func JWTMiddleware(next http.Handler) http.Handler {
 					}
 				}
 
-				log.Println(dh_token)
 				if dh_token == "" {
 					w.WriteHeader(http.StatusUnauthorized)
 					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
@@ -73,7 +74,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 					return
 				}
 			}
-			log.Println(mapClaims["username"])
+			// log.Println(mapClaims["username"])
 			has, err, tokenItem := db.GetUserTokenItem(mapClaims["username"].(string))
 			checkErr(err)
 			if !has || err != nil || tokenItem.DH_TOKEN != dh_token {

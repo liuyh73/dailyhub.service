@@ -40,7 +40,8 @@ func jsonDecode(r io.Reader, val interface{}) error {
 
 // 注册
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	profile := &model.Profile{}
+	err := jsonDecode(r.Body, profile)
 	checkErr(err)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
@@ -48,11 +49,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(writeResp(false, "Error in request", Token{}))
 		return
 	}
-	has, err, _ := db.GetUserProfile(r.Form.Get("username"))
+	has, err, _ := db.GetUserProfile(profile.Username)
 	checkErr(err)
 	if !has && err == nil {
-		token, err := createToken([]byte(SecretKey), Issuer, r.Form.Get("username"))
-		fmt.Println(token)
+		token, err := createToken([]byte(SecretKey), Issuer, profile.Username)
+		// fmt.Println(token)
 		checkErr(err)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -60,14 +61,15 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(writeResp(false, "Error marshal the token", Token{}))
 		}
 		w.WriteHeader(http.StatusOK)
-		rows, err := db.InsertUserTokenItem(r.Form.Get("username"), token.DH_TOKEN)
+		rows, err := db.InsertUserTokenItem(profile.Username, token.DH_TOKEN)
 		log.Println(rows)
 		checkErr(err)
 		rows, err = db.InsertUserProfile(model.Profile{
-			Username: r.Form.Get("username"),
-			Password: r.Form.Get("password"),
+			Username: profile.Username,
+			Password: profile.Password,
+			Avatar:   profile.Avatar,
 		})
-		log.Println(rows)
+		// log.Println(rows)
 		checkErr(err)
 		w.Write(writeResp(true, "Succeed to register", token))
 	} else {
@@ -77,30 +79,25 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // 登录
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	profile := &model.Profile{}
+	err := jsonDecode(r.Body, profile)
 	checkErr(err)
-	fmt.Println(r.Form.Get("username"))
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Print("Error in request")
 		w.Write(writeResp(false, "Error in request", Token{}))
 		return
 	}
-	user := &model.Profile{
-		Username: r.Form.Get("username"),
-		Password: r.Form.Get("password"),
-	}
-	fmt.Printf("%#v\n", user)
-	has, err := db.Engine.Get(user)
+	fmt.Printf("%#v\n", profile)
+	has, err := db.Engine.Get(profile)
 	log.Println(has, err)
 	if !has || err != nil {
-		w.WriteHeader(http.StatusForbidden)
 		fmt.Println("Error logging in")
 		w.Write(writeResp(false, "Error logging in", Token{}))
 		return
 	}
 
-	token, err := createToken([]byte(SecretKey), Issuer, user.Username)
+	token, err := createToken([]byte(SecretKey), Issuer, profile.Username)
 	checkErr(err)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -110,10 +107,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 
-	rows, err := db.DeleteUserTokenItem(user.Username)
+	rows, err := db.DeleteUserTokenItem(profile.Username)
 	log.Println(rows)
 	checkErr(err)
-	rows, err = db.InsertUserTokenItem(user.Username, token.DH_TOKEN)
+	rows, err = db.InsertUserTokenItem(profile.Username, token.DH_TOKEN)
 	log.Println(rows)
 	checkErr(err)
 	w.Write(writeResp(true, "Succeed to login", token))
@@ -128,7 +125,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // 用户信息
 func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
-	has, err, profile := db.GetUserProfile(r.Context().Value("username").(string))
+	has, err, profile := db.GetUserProfile(strings.Split(r.RequestURI, "/")[3])
 	checkErr(err)
 	if has {
 		w.Write(writeResp(true, "Succeed to get profile", profile))
@@ -152,7 +149,7 @@ func GetHabitsHandler(w http.ResponseWriter, r *http.Request) {
 func GetHabitHandler(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.RequestURI, "/")
 	id := params[3]
-	log.Println(id)
+	// log.Println(id)
 	has, err, habit := db.GetUserHabit(r.Context().Value("username").(string), id)
 	checkErr(err)
 	if has {

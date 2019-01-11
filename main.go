@@ -27,7 +27,7 @@ func initRoutes(router *mux.Router) {
 	router.HandleFunc("/api/register", service.RegisterHandler).Methods("POST")
 	router.HandleFunc("/api/logout", service.LogoutHandler).Methods("POST", "GET")
 	// user相关
-	router.HandleFunc("/api/user", service.GetProfileHandler).Methods("GET")
+	router.HandleFunc("/api/users/{user}", service.GetProfileHandler).Methods("GET")
 
 	// habits相关
 	// GET

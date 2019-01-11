@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
@@ -22,6 +23,7 @@ type config struct {
 }
 
 var Engine *xorm.Engine
+var timeFormat string = "2006-01-02 15:04"
 
 func checkErr(err error) {
 	if err != nil {
@@ -132,7 +134,7 @@ func InsertUserHabit(username string, habit model.Habit) (int64, error, string) 
 		id, _ = strconv.Atoi(profile.Habits[len(profile.Habits)-1])
 	}
 	habitId := strconv.Itoa(id + 1)
-	log.Println(habitId)
+	// log.Println(habitId)
 	profile.Habits = append(profile.Habits, habitId)
 	_, err = UpdateUserProfile(*profile)
 	checkErr(err)
@@ -153,7 +155,7 @@ func getFebDays(year string) int {
 func getDays(monthId string) int {
 	year := strings.Split(monthId, "-")[0]
 	month := strings.Split(monthId, "-")[1]
-	log.Println(month)
+	// log.Println(month)
 	switch month {
 	case "01", "03", "05", "07", "08", "10", "12":
 		return 31
@@ -200,6 +202,20 @@ func InsertUserHabitMonthDay(username, habitId, monthId string, day model.Day) (
 	if has && err == nil {
 		habit.LastRecentPunchTime = habit.RecentPunchTime
 		habit.RecentPunchTime = day.Time
+		habit.TotalPunch = habit.TotalPunch + 1
+		lastRecentPunchDate, err := time.Parse(timeFormat, habit.LastRecentPunchTime)
+		checkErr(err)
+		lastRecentPunchDate = lastRecentPunchDate.AddDate(0, 0, 1)
+		lRPD := strings.Split(lastRecentPunchDate.String(), " ")[0]
+		rPD := strings.Split(habit.RecentPunchTime, " ")[0]
+		if lRPD == rPD {
+			habit.CurrcPunch = habit.CurrcPunch + 1
+		} else {
+			if habit.OncecPunch < habit.CurrcPunch {
+				habit.OncecPunch = habit.CurrcPunch
+			}
+			habit.CurrcPunch = 1
+		}
 		_, err = UpdateUserHabit(username, *habit)
 		checkErr(err)
 	}
@@ -303,7 +319,7 @@ func DeleteUserHabit(username, habitId string) (int64, error) {
 			}
 		}
 		rows, err = UpdateUserProfile(*profile)
-		log.Println(rows)
+		// log.Println(rows)
 		checkErr(err)
 	}
 	return rows, err
@@ -324,8 +340,8 @@ func DeleteUserHabitMonthDay(username, habitId, monthId, dayId string) (int64, e
 		month.ActualPunch = month.ActualPunch - 1
 		month.MissPunch = month.MissPunch + 1
 		fmt.Printf("%#v\n", month)
-		rows, err := Engine.Where("id = ?", month.Id).Cols("actual_punch, days, miss_punch").Update(month)
-		log.Println(rows)
+		_, err := Engine.Where("id = ?", month.Id).Cols("actual_punch, days, miss_punch").Update(month)
+		// log.Println(rows)
 		checkErr(err)
 	}
 
@@ -333,6 +349,8 @@ func DeleteUserHabitMonthDay(username, habitId, monthId, dayId string) (int64, e
 	checkErr(err)
 	if has && err == nil {
 		habit.RecentPunchTime = habit.LastRecentPunchTime
+		habit.CurrcPunch = habit.CurrcPunch - 1
+
 		_, err = UpdateUserHabit(username, *habit)
 		checkErr(err)
 	}
