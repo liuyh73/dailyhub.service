@@ -30,7 +30,7 @@ func checkErr(err error) {
 func createToken(secretkey []byte, issuer string, username string) (token Token, err error) {
 	claims := &jwtCustomClaims{
 		jwt.StandardClaims{
-			ExpiresAt: int64(time.Now().Add(time.Hour * 24 * 7).Unix()),
+			ExpiresAt: int64(time.Now().Add(time.Hour * 24 * 365 * 100).Unix()),
 			Issuer:    issuer,
 		},
 		username,
