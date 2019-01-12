@@ -232,12 +232,17 @@ func PostDayHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := db.InsertUserHabitMonthDay(r.Context().Value("username").(string), habitId, monthId, *day)
 		checkErr(err)
 		if err == nil {
-			w.Write(writeResp(true, "Succeed to punch in the day", day))
+			has, err, habit := db.GetUserHabit(r.Context().Value("username").(string), habitId)
+			if has && err == nil {
+				w.Write(writeResp(true, "Succeed to punch in the day", habit))
+			} else {
+				w.Write(writeResp(false, "Fail to punch in the day", nil))
+			}
 		} else {
-			w.Write(writeResp(false, "Fail to punch in the day", day))
+			w.Write(writeResp(false, "Fail to punch in the day", nil))
 		}
 	} else {
-		w.Write(writeResp(false, "The request body need to be day type", day))
+		w.Write(writeResp(false, "The request body need to be day type", nil))
 	}
 }
 
@@ -338,7 +343,12 @@ func DeleteDayHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := db.DeleteUserHabitMonthDay(r.Context().Value("username").(string), habitId, monthId, dayId)
 	checkErr(err)
 	if err == nil {
-		w.Write(writeResp(true, "Succeed to delete the punch", nil))
+		has, err, habit := db.GetUserHabit(r.Context().Value("username").(string), habitId)
+		if has && err == nil {
+			w.Write(writeResp(true, "Succeed to delete the punch", habit))
+		} else {
+			w.Write(writeResp(false, "Failed to delete the punch", nil))
+		}
 	} else {
 		w.Write(writeResp(false, "Failed to delete the punch", nil))
 	}

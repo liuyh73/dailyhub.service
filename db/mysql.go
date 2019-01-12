@@ -210,7 +210,7 @@ func InsertUserHabitMonthDay(username, habitId, monthId string, day model.Day) (
 		rPD := strings.Split(habit.RecentPunchTime, " ")[0]
 		if lRPD == rPD {
 			habit.CurrcPunch = habit.CurrcPunch + 1
-		} else {
+		} else if lRPD < rPD {
 			if habit.OncecPunch < habit.CurrcPunch {
 				habit.OncecPunch = habit.CurrcPunch
 			}
@@ -348,6 +348,7 @@ func DeleteUserHabitMonthDay(username, habitId, monthId, dayId string) (int64, e
 	has, err, habit := GetUserHabit(username, habitId)
 	checkErr(err)
 	if has && err == nil {
+		habit.TotalPunch = habit.TotalPunch - 1
 		habit.RecentPunchTime = habit.LastRecentPunchTime
 		habit.CurrcPunch = habit.CurrcPunch - 1
 
