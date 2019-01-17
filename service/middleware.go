@@ -47,7 +47,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 				mapClaims, ok = token.Claims.(jwt.MapClaims)
 				if !ok {
 					w.WriteHeader(http.StatusUnauthorized)
-					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+					w.Write(writeResp(false, "Unauthorized access to this resource", nil))
 					return
 				}
 				dh_token = strings.Split(r.Header["Authorization"][0], " ")[1]
@@ -62,7 +62,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 
 				if dh_token == "" {
 					w.WriteHeader(http.StatusUnauthorized)
-					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+					w.Write(writeResp(false, "Unauthorized access to this resource", nil))
 					return
 				}
 
@@ -70,7 +70,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 				checkErr(err)
 				if err != nil || mapClaims.Valid() != nil {
 					w.WriteHeader(http.StatusUnauthorized)
-					w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+					w.Write(writeResp(false, "Unauthorized access to this resource", nil))
 					return
 				}
 			}
@@ -79,7 +79,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			checkErr(err)
 			if !has || err != nil || tokenItem.DH_TOKEN != dh_token {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write(writeResp(false, "Unauthorized access to this resource", Token{}))
+				w.Write(writeResp(false, "Unauthorized access to this resource", nil))
 			} else {
 				ctx := context.WithValue(r.Context(), "username", mapClaims["username"])
 				next.ServeHTTP(w, r.WithContext(ctx))

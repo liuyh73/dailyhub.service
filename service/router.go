@@ -38,6 +38,11 @@ func jsonDecode(r io.Reader, val interface{}) error {
 	return dec.Decode(val)
 }
 
+// Api
+func ApiHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(model.Apis))
+}
+
 // 注册
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	profile := &model.Profile{}

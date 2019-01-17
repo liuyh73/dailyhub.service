@@ -22,6 +22,7 @@ func NewServer() *negroni.Negroni {
 
 func initRoutes(router *mux.Router) {
 	router.Use(service.JWTMiddleware)
+	router.HandleFunc("/api", service.ApiHandler).Methods("GET")
 	// 注册、登录、退出
 	router.HandleFunc("/api/login", service.LoginHandler).Methods("POST")
 	router.HandleFunc("/api/register", service.RegisterHandler).Methods("POST")
@@ -59,7 +60,6 @@ func initRoutes(router *mux.Router) {
 	sub.HandleFunc("/{dailyCommitId:[0-9]+}", service.PutDailyCommitHandler).Methods("PUT")
 	// DELETE
 	sub.HandleFunc("/{dailyCommitId:[0-9]+}", service.DeleteDailyCommitHandler).Methods("DELETE")
-	// router.HandleFunc("/api", service.ApiHandler).Methods("GET")
 }
 
 func main() {
