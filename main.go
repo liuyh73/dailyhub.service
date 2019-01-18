@@ -71,5 +71,5 @@ func main() {
 	server := NewServer()
 	server.Run(":" + port)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/ for dailyhub server", port)
 }

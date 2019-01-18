@@ -19,9 +19,32 @@ $ go run main.go
 
 ### docker部署服务
 
+在`db`文件夹下增加`db_user_password.txt`和`db_root_password.txt`，其中内容即为user和root的密码（密码为**dailyhub**）。
+
 在项目根目录下执行：
 
 ```bash
 $ docker-compose up -d
+```
+
+将`db`文件夹下的`data.sql`文件拷贝到`mysql`容器中：
+
+```bash
+$ docker cp db/data.sql mysql:/mysql
+```
+
+之后，使用`docker exec -it <mysql容器id> /bin/bash`运行容器：
+
+```bash
+# 登录mysql
+$ mysql -u dailyhub -p 
+password: dailyhub
+```
+
+初始化数据库：
+
+```bash
+mysql> create database dailyhub;
+mysql> source /mysql/data.sql
 ```
 
